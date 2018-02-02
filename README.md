@@ -1,3 +1,5 @@
+[![NPM version](https://badge.fury.io/js/dts-pack.svg)](http://badge.fury.io/js/dts-pack)
+
 dts-pack
 ==========
 
