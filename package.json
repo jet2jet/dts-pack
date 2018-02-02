@@ -1,12 +1,15 @@
 {
   "name": "dts-pack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript declaration file (.d.ts) packager for ES6-module based program",
   "main": "./dist/index.js",
   "author": "jet",
   "license": "MIT",
   "homepage": "https://github.com/jet2jet/dts-pack",
-  "keywords": [ "typescript", "declaration" ],
+  "keywords": [
+    "typescript",
+    "declaration"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/jet2jet/dts-pack.git"
