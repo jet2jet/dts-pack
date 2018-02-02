@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "declaration": true,
+    "lib": [ "es5" ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "../outModuleTest",
+    "paths": {
+      "*": [
+        "../../../node_modules/@types/*",
+        "../../../node_modules/*"
+      ]
+    },
+    "sourceMap": true,
+    "strict": true,
+    "target": "es5"
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

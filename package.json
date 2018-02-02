@@ -1,0 +1,27 @@
+{
+  "name": "dts-pack",
+  "version": "0.1.0",
+  "description": "TypeScript declaration file (.d.ts) packager for ES6-module based program",
+  "main": "./dist/index.js",
+  "author": "jet",
+  "license": "MIT",
+  "bin": "./dist/cli.js",
+  "homepage": "https://github.com/jet2jet/dts-pack",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jet2jet/dts-pack.git"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node ./dist/cli.js"
+  },
+  "dependencies": {
+    "editorconfig": "^0.15.0",
+    "typescript": "2.6.2",
+    "yargs": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "6",
+    "@types/yargs": "^10.0.1"
+  }
+}

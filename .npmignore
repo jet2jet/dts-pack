@@ -1,0 +1,10 @@
+/.settings/
+/.vs/
+/.vscode/
+/examples/
+/src/
+.editorconfig
+.gitignore
+.gitmodules
+.gitattributes
+yarn.lock

@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "module": "es2015",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
