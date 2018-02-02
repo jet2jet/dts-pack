@@ -57,6 +57,9 @@ function gatherAllExportEntitiesFromExternalModule(
 	program: ts.Program
 ): string[] | null {
 	const src = program.getSourceFile(resolvedFileName);
+	if (!src) {
+		return null;
+	}
 	const checker = program.getTypeChecker();
 	const moduleSymbol = checker.getSymbolAtLocation(src);
 	if (!moduleSymbol) {
