@@ -1,9 +1,15 @@
-[![NPM version](https://badge.fury.io/js/dts-pack.svg)](http://badge.fury.io/js/dts-pack)
+[![NPM version](https://badge.fury.io/js/dts-pack.svg)](https://www.npmjs.com/package/dts-pack)
 
 dts-pack
 ==========
 
 Generates concatenated `.d.ts` file(s) for the TypeScript project.
+
+## Install
+
+```
+npm install dts-pack
+```
 
 ## Usage
 
