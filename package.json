@@ -8,7 +8,9 @@
   "homepage": "https://github.com/jet2jet/dts-pack",
   "keywords": [
     "typescript",
-    "declaration"
+    "declaration",
+    "webpack",
+    "plugin"
   ],
   "repository": {
     "type": "git",
