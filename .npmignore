@@ -3,8 +3,10 @@
 /.vscode/
 /examples/
 /src/
+/tools/
 .editorconfig
 .gitignore
 .gitmodules
 .gitattributes
+.npmignore
 yarn.lock

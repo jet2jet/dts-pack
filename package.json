@@ -20,7 +20,7 @@
   "scripts": {
     "build": "tsc -p .",
     "start": "node ./dist/cli.js",
-    "version": "node ./tools/updateVersion.js ./src/main/core/version.ts"
+    "version": "node ./tools/updateVersion.js ./src/main/core/version.ts && git add -A ./src/main/core/version.ts"
   },
   "dependencies": {
     "editorconfig": "^0.15.0",
