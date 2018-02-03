@@ -52,7 +52,7 @@ If omitted, `'./tsconfig.json'` will be used.
 
 #### --entry, -e (string)
 
-Specifies the entry module name to expose exported entities. This is treated as a source name of the project, so the name must be the relative path name from the root source directory.
+Specifies the entry module name to expose exported entities. This is treated as a source file name of the project. If the path is relative, the path is treated as referring from the root source directory (from `baseUrl` or the project directory).
 If an extension is omitted, `.ts` will be appended.
 
 #### --moduleName, -m (string)
@@ -112,6 +112,51 @@ dts-pack -p ./tsconfig.json -e index.ts -m myModule -s module -x default -o ./di
 ```
 
 For creating namespace-style, change 'module' of the command line above to 'namespace'.
+
+## webpack plugin
+
+dts-pack can be used as a plugin for [webpack](https://webpack.js.org/). The `DtsPackPlugin` gathers all emitted files with an extension `.d.ts`, and emits one or two combined declaration file(s). Currently the plugin is tested only with the combination of webpack 3 and  [ts-loader](https://github.com/TypeStrong/ts-loader) (the plugin might be work on webpack 2, but not tested).
+
+### Usage
+
+```js
+var DtsPackPlugin = require('dts-pack').DtsPackPlugin;
+
+...
+// in the configuration
+{
+  ...
+  plugins: [
+    new DtsPackPlugin({
+      entry: 'index.ts',
+      moduleName: 'myModule'
+    })
+  ]
+}
+```
+
+... and **you need to set `declaration: true` option into the `tsconfig.json`** if `useProjectSources` is not `true`.
+
+### Options (the first parameter of plugin's constructor)
+
+All options passed to the constructor of `DtsPackPlugin` are the same name to the command-line parameters. In addition, if `entry` and `moduleName` are the same to the webpack configuration (`entry` value and the key name of `entry` object respectively), they can also be omitted. Other options below can be collected from webpack configuration if not specified:
+
+- `outDir`: collected from `output.path`
+- `rootName`: collected from `output.library`
+
+The additional options below can also be used for the plugin (all options are optional).
+
+#### compilerOptions (ts.CompilerOptions)
+
+Compiler options overwriting the options in the `tsconfig.json`. These options are only used for TypeScript compiler using in the plugin; some options (such as `declaration`, `removeComments`, `stripInternal`, etc.) are not effective.
+
+If the module resolution is not working properly because of the difference of settings between webpack configuration and `tsconfig.json`, please use `compilerOptions` to resolve problems.
+
+#### useProjectSources (boolean)
+
+Specifies `true` if you want to use real source files in the project instead of emitted declaration files. This may cause slower buildings because the source files will be compiled twice.
+
+Regardless of this option, the original emitted declaration files are removed from outputs.
 
 ## License
 
