@@ -21,6 +21,8 @@ import makeChildModule from './packer/makeChildModule';
 import rebuildAST from './packer/rebuildAST';
 import resolveModule from './packer/resolveModule';
 
+import DtsPackPlugin from './plugin/DtsPackPlugin';
+
 ////////////////////////////////////////////////////////////////////////////////
 
 function convertDeclFileNameToSourceFileName(compilerOptions: ts.CompilerOptions, projectFile: string, declFile: string): string {
@@ -431,3 +433,5 @@ export function runWithFiles(
 export function run(messageWriter: (text: string) => void, options: Options): { files: { [fileName: string]: string }, warnings: string } {
 	return runWithFiles(messageWriter, options, {});
 }
+
+export { DtsPackPlugin };

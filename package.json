@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "6",
+    "@types/webpack": "2",
     "@types/yargs": "^10.0.1"
   }
 }
