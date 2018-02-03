@@ -3,21 +3,23 @@ import * as path from 'path';
 import * as ts from 'typescript';
 import * as editorconfig from 'editorconfig';
 
-import EditorConfig from './EditorConfig';
-import ExternalImportData from './ExternalImportData';
-import GlobalDeclarationData from './GlobalDeclarationData';
-import ImportsAndExports from './ImportsAndExports';
-import Options from './Options';
+import EditorConfig from './types/EditorConfig';
+import ExternalImportData from './types/ExternalImportData';
+import GlobalDeclarationData from './types/GlobalDeclarationData';
+import ImportsAndExports from './types/ImportsAndExports';
+import Options from './types/Options';
 
-import collectImportsAndExports from './collectImportsAndExports';
-import getFormatDiagnosticHost from './getFormatDiagnosticHost';
-import getIdentifierName from './getIdentifierName';
-import getNamespaceName from './getNamespaceName';
-import isChildPath from './isChildPath';
-import isEqualPath from './isEqualPath';
-import makeChildModule from './makeChildModule';
-import rebuildAST from './rebuildAST';
-import resolveModule from './resolveModule';
+import collectImportsAndExports from './core/collectImportsAndExports';
+import getFormatDiagnosticHost from './core/getFormatDiagnosticHost';
+
+import isChildPath from './utils/isChildPath';
+import isEqualPath from './utils/isEqualPath';
+
+import getIdentifierName from './packer/getIdentifierName';
+import getNamespaceName from './packer/getNamespaceName';
+import makeChildModule from './packer/makeChildModule';
+import rebuildAST from './packer/rebuildAST';
+import resolveModule from './packer/resolveModule';
 
 ////////////////////////////////////////////////////////////////////////////////
 

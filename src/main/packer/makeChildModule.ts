@@ -1,11 +1,13 @@
 import * as path from 'path';
 import * as ts from 'typescript';
 
-import Options from './Options';
+import Options from '../types/Options';
+
+import isChildPath from '../utils/isChildPath';
+
+import getModuleNameFromSpecifier from '../core/getModuleNameFromSpecifier';
 
 import createStringLiteral from './createStringLiteral';
-import getModuleNameFromSpecifier from './getModuleNameFromSpecifier';
-import isChildPath from './isChildPath';
 import resolveModule from './resolveModule';
 
 function getModuleName(basePath: string, targetPath: string) {

@@ -6,10 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yargs from 'yargs';
 
-import Options from './Options';
+import Options from './types/Options';
 
 const thisName = 'dts-pack';
-import thisVersion from './version';
+import thisVersion from './core/version';
 
 interface Arguments extends yargs.Arguments, Options {
 	version?: boolean;
