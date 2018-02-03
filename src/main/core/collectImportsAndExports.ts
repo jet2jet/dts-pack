@@ -1,8 +1,8 @@
 import * as ts from 'typescript';
 
-import ExportData from './ExportData';
-import ImportData from './ImportData';
-import ImportsAndExports from './ImportsAndExports';
+import ExportData from '../types/ExportData';
+import ImportData from '../types/ImportData';
+import ImportsAndExports from '../types/ImportsAndExports';
 
 import getModuleNameFromSpecifier from './getModuleNameFromSpecifier';
 

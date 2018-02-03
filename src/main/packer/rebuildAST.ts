@@ -1,15 +1,16 @@
 import * as ts from 'typescript';
 
-import ExternalImportData from './ExternalImportData';
-import GlobalDeclarationData from './GlobalDeclarationData';
-import ImportData from './ImportData';
-import ImportsAndExports from './ImportsAndExports';
-import Options from './Options';
+import ExternalImportData from '../types/ExternalImportData';
+import GlobalDeclarationData from '../types/GlobalDeclarationData';
+import ImportData from '../types/ImportData';
+import ImportsAndExports from '../types/ImportsAndExports';
+import Options from '../types/Options';
+
+import isChildPath from '../utils/isChildPath';
+import isEqualPath from '../utils/isEqualPath';
 
 import getIdentifierName from './getIdentifierName';
 import getNamespaceName from './getNamespaceName';
-import isChildPath from './isChildPath';
-import isEqualPath from './isEqualPath';
 import resolveModule from './resolveModule';
 
 function getImportData(data: ImportsAndExports, node: ts.Node): ImportData[] {

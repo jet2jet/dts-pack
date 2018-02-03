@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import Options from './Options';
+import Options from '../types/Options';
 
 export default function getNamespaceName(basePath: string, targetPath: string, options: Options): string {
 	const r = path.relative(basePath, targetPath).replace(/\..*?$/g, '').replace(/[\/\\]/g, '.');
