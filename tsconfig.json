@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./src/main",
     "declaration": true,
-    "lib": [ "es5", "es2015.core", "es2015.promise" ],
+    "lib": [ "es5", "es2015.core", "es2015.promise", "es2015.collection" ],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitReturns": true,

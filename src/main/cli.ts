@@ -88,6 +88,10 @@ function main(): number {
 				default: '__module',
 				description: 'The identifier for binding modules with \'import\''
 			})
+			.option('stripUnusedExports', {
+				type: 'boolean',
+				description: 'The flag whether exported entities are stripped when not used'
+			})
 			.option('list', {
 				type: 'boolean',
 				description: 'If specified, outputs all imports and exports and exit without emitting files.'
@@ -113,10 +117,7 @@ function main(): number {
 				if (!(argv.list || argv.entry || argv.moduleName)) {
 					throw '--entry and --moduleName are missing';
 				}
-				if (argv.list && (argv.entry || argv.moduleName)) {
-					throw '--list cannot be used with --entry and --moduleName';
-				}
-				if (!!argv.entry !== !!argv.moduleName) {
+				if (!argv.list && !!argv.entry !== !!argv.moduleName) {
 					throw 'both --entry and --moduleName must be specified';
 				}
 				if (argv.defaultName === 'default') {

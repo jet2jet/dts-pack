@@ -1,10 +1,14 @@
 import * as ts from 'typescript';
+import * as path from 'path';
 
+import ExportDataMap from '../types/ExportDataMap';
 import ExternalImportData from '../types/ExternalImportData';
 import GlobalDeclarationData from '../types/GlobalDeclarationData';
 import ImportData from '../types/ImportData';
 import ImportsAndExports from '../types/ImportsAndExports';
 import Options from '../types/Options';
+
+import getNodeWithStrippedExports from '../core/getNodeWithStrippedExports';
 
 import isChildPath from '../utils/isChildPath';
 import isEqualPath from '../utils/isEqualPath';
@@ -83,8 +87,10 @@ export default function rebuildAST(
 	host: ts.CompilerHost,
 	program: ts.Program,
 	compilerOptions: ts.CompilerOptions,
-	resolutionCache: ts.ModuleResolutionCache
+	resolutionCache: ts.ModuleResolutionCache,
+	stripUnusedExports?: ExportDataMap | undefined
 ) {
+	const resolvedFileName = path.resolve(sourceFile.fileName);
 	const namespaceName = getNamespaceName(basePath, sourceFile.fileName, options);
 	const n = ts.createIdentifier(namespaceName);
 
@@ -99,6 +105,14 @@ export default function rebuildAST(
 	} = {};
 	const moduleStatements: ts.Statement[] = [];
 	sourceFile.forEachChild((node) => {
+		if (stripUnusedExports) {
+			const n = getNodeWithStrippedExports(sourceFile, resolvedFileName, node, stripUnusedExports);
+			if (n === null) {
+				return;
+			}
+			node = n;
+		}
+
 		if (ts.isFunctionDeclaration(node) ||
 			ts.isMissingDeclaration(node) ||
 			ts.isClassDeclaration(node) ||

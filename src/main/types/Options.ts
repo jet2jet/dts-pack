@@ -56,5 +56,11 @@ export default interface Options {
 	 */
 	compilerOptions?: ts.CompilerOptions;
 
+	/**
+	 * The boolean value whether exported entities are stripped when not used.
+	 */
+	stripUnusedExports?: boolean | undefined;
+
+	// (for command-line option)
 	list?: boolean | undefined;
 }

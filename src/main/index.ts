@@ -4,13 +4,17 @@ import * as ts from 'typescript';
 import * as editorconfig from 'editorconfig';
 
 import EditorConfig from './types/EditorConfig';
+import ExportDataMap from './types/ExportDataMap';
 import ExternalImportData from './types/ExternalImportData';
 import GlobalDeclarationData from './types/GlobalDeclarationData';
 import ImportsAndExports from './types/ImportsAndExports';
 import Options from './types/Options';
 
 import collectImportsAndExports from './core/collectImportsAndExports';
+import collectUnusedSymbols from './core/collectUnusedSymbols';
+import createProgramFromMemory from './core/createProgramFromMemory';
 import getFormatDiagnosticHost from './core/getFormatDiagnosticHost';
+import pickupUnusedExports from './core/pickupUnusedExports';
 
 import isChildPath from './utils/isChildPath';
 import isEqualPath from './utils/isEqualPath';
@@ -53,11 +57,11 @@ function gatherAllDeclarations(
 	compilerOptions: ts.CompilerOptions,
 	checkInputs?: boolean
 ): {
-	files: ReadonlyArray<ts.SourceFile>,
+	files: { [fileName: string]: string },
 	diagnostics: ReadonlyArray<ts.Diagnostic>,
 	hasError: boolean
 } {
-	const r: ts.SourceFile[] = [];
+	const r: { [fileName: string]: string } = {};
 	let diag: ts.Diagnostic[] = [];
 	const writeFile: ts.WriteFileCallback = (
 		fileName: string,
@@ -68,7 +72,7 @@ function gatherAllDeclarations(
 		}
 		// set source file to the original file name instead of declaration file
 		const srcFileName = convertDeclFileNameToSourceFileName(compilerOptions, projectFile, fileName);
-		r.push(ts.createSourceFile(srcFileName, data, compilerOptions.target || ts.ScriptTarget.ES5, true));
+		r[srcFileName] = data;
 	};
 	let inputFileNames: string[];
 	if (inputFiles && (inputFileNames = Object.keys(inputFiles)).length > 0) {
@@ -79,8 +83,7 @@ function gatherAllDeclarations(
 				diag = diag.concat(emitResult.diagnostics);
 			} else {
 				const srcFileName = convertDeclFileNameToSourceFileName(compilerOptions, projectFile, name);
-				const src = ts.createSourceFile(srcFileName, inputFiles[name], compilerOptions.target || ts.ScriptTarget.ES5, true);
-				r.push(src);
+				r[srcFileName] = inputFiles[name];
 			}
 		});
 	} else {
@@ -91,7 +94,7 @@ function gatherAllDeclarations(
 	}
 	const hasError = diag.some((d) => d.category === ts.DiagnosticCategory.Error);
 	return {
-		files: diag.length > 0 ? [] : r,
+		files: diag.length > 0 ? {} : r,
 		diagnostics: diag,
 		hasError: hasError
 	};
@@ -162,21 +165,61 @@ function isEqualEntryFile(source: ts.SourceFile, entryFileName: string): boolean
 
 function printImportsAndExports(
 	messageWriter: (text: string) => void,
-	_options: Options,
+	options: Options,
 	econf: EditorConfig,
-	_projectFile: string,
+	projectFile: string,
 	sourceFiles: ReadonlyArray<ts.SourceFile>,
 	host: ts.CompilerHost,
 	compilerOptions: ts.CompilerOptions,
-	resolutionCache: ts.ModuleResolutionCache
+	resolutionCache: ts.ModuleResolutionCache,
+	program: ts.Program
 ) {
 	//writer(`Files: ${sourceFiles.map((src) => src.fileName).join(econf.lineBreak + '  ')}:`);
 
+	const map: { [fileName: string]: ImportsAndExports } = {};
 	sourceFiles.forEach((file) => {
 		const rx = collectImportsAndExports(file);
+		map[path.resolve(file.fileName)] = rx;
 		outputImportsAndExports(messageWriter, econf, host, compilerOptions, resolutionCache, file.fileName, rx);
 		messageWriter('');
 	});
+
+	if (options.entry) {
+		const baseUrl = compilerOptions.baseUrl || '.';
+		const basePath = path.resolve(path.dirname(projectFile), baseUrl);
+		const entryFileName = path.resolve(basePath, options.entry);
+		const r = pickupUnusedExports(entryFileName, options.export, map, host, compilerOptions, resolutionCache);
+		const retKeys = Object.keys(r);
+		if (retKeys.length > 0) {
+			messageWriter('Unused exports:');
+			sourceFiles.forEach((sourceFile) => {
+				const fileName = path.resolve(sourceFile.fileName);
+				let a = r[fileName];
+				if (a) {
+					const unusedSymbols = collectUnusedSymbols(sourceFile, program.getTypeChecker(), a);
+					a = a.filter((exp) => {
+						exp.namedExports = exp.namedExports.filter((x) => {
+							const s = x.baseName || x.name;
+							return unusedSymbols.some((sym) => sym === s);
+						});
+						return exp.namedExports.length > 0;
+					});
+					if (a.length > 0) {
+						messageWriter(`  ${fileName}:`);
+						if (a.length === map[fileName]!.exports.length) {
+							messageWriter('    <all exports are unused>');
+						} else {
+							a.forEach((x) => {
+								x.namedExports.forEach((named) => {
+									messageWriter(`    ${named.baseName || named.name}`);
+								});
+							});
+						}
+					}
+				}
+			});
+		}
+	}
 }
 
 function outputFiles(
@@ -199,11 +242,49 @@ function outputFiles(
 	if (!sourceFiles.some((src) => isEqualEntryFile(src, entryFileName))) {
 		throw `tsd-pack: ERROR: entry file '${options.entry}' is not found.`;
 	}
-	//const outFile = ts.createSourceFile('test.d.ts', '', compilerOptions.target || ts.ScriptTarget.ES5, true);
-	//const statements: ts.Statement[] = [];
 	const printer = ts.createPrinter({
 		newLine: ts.NewLineKind.LineFeed
 	});
+
+	let stripUnusedExports: ExportDataMap | undefined;
+	if (options.stripUnusedExports) {
+		const map: { [fileName: string]: ImportsAndExports } = {};
+		sourceFiles.forEach((file) => {
+			const rx = collectImportsAndExports(file);
+			map[path.resolve(file.fileName)] = rx;
+		});
+		stripUnusedExports = pickupUnusedExports(
+			entryFileName,
+			options.export,
+			map,
+			host,
+			compilerOptions,
+			resolutionCache
+		);
+
+		sourceFiles = sourceFiles.filter((file) => {
+			const fileName = path.resolve(file.fileName);
+			let a = stripUnusedExports![fileName];
+
+			if (a) {
+				const unusedSymbols = collectUnusedSymbols(file, program.getTypeChecker(), a);
+				a = a.filter((exp) => {
+					exp.namedExports = exp.namedExports.filter((x) => {
+						const s = x.baseName || x.name;
+						return unusedSymbols.some((sym) => sym === s);
+					});
+					return exp.namedExports.length > 0;
+				});
+				if (!a.length) {
+					delete stripUnusedExports![fileName];
+					return true;
+				}
+				stripUnusedExports![fileName] = a;
+			}
+
+			return !a || a.length !== map[fileName]!.exports.length;
+		});
+	}
 
 	if (options.style !== 'namespace') {
 		const childDeclOutputs: string[] = [];
@@ -216,8 +297,12 @@ function outputFiles(
 				options.moduleName,
 				host,
 				compilerOptions,
-				resolutionCache
+				resolutionCache,
+				stripUnusedExports
 			);
+			if (m === null) {
+				return;
+			}
 			childDeclOutputs.push(printer.printNode(ts.EmitHint.Unspecified, m.module, file));
 			childDeclOutputs.push('');
 			if (isEqualEntryFile(file, entryFileName)) {
@@ -275,7 +360,8 @@ function outputFiles(
 				host,
 				program,
 				compilerOptions,
-				resolutionCache
+				resolutionCache,
+				stripUnusedExports
 			);
 			if (st) {
 				st.parent = file;
@@ -377,6 +463,14 @@ export function runWithFiles(
 		throw ts.formatDiagnostics(decls.diagnostics, getFormatDiagnosticHost());
 	}
 
+	const newProgram = createProgramFromMemory(decls.files, compilerOptions, host, program);
+	const files = (() => {
+		const baseFiles = Object.keys(decls.files);
+		return newProgram.getSourceFiles().filter((file) => {
+			return baseFiles.some((f) => isEqualPath(file.fileName, f));
+		});
+	})();
+
 	let warnings = '';
 	if (decls.diagnostics && decls.diagnostics.length) {
 		warnings = ts.formatDiagnostics(decls.diagnostics, getFormatDiagnosticHost());
@@ -409,13 +503,32 @@ export function runWithFiles(
 	}
 
 	if (options.list) {
-		printImportsAndExports(messageWriter, options, econf, projectFile, decls.files, host, compilerOptions, resolutionCache);
+		printImportsAndExports(
+			messageWriter,
+			options,
+			econf,
+			projectFile,
+			files,
+			host,
+			compilerOptions,
+			resolutionCache,
+			newProgram
+		);
 		return {
 			files: {},
 			warnings
 		};
 	} else {
-		const x = outputFiles(options, econf, projectFile, decls.files, host, compilerOptions, resolutionCache, program);
+		const x = outputFiles(
+			options,
+			econf,
+			projectFile,
+			files,
+			host,
+			compilerOptions,
+			resolutionCache,
+			newProgram
+		);
 		return {
 			files: x.files,
 			warnings: warnings + x.warnings
