@@ -1,17 +1,23 @@
 import * as path from 'path';
 import * as ts from 'typescript';
 
+import ExportDataMap from '../types/ExportDataMap';
 import Options from '../types/Options';
 
 import isChildPath from '../utils/isChildPath';
 
 import getModuleNameFromSpecifier from '../core/getModuleNameFromSpecifier';
+import getNodeWithStrippedExports from '../core/getNodeWithStrippedExports';
 
 import createStringLiteral from './createStringLiteral';
 import resolveModule from './resolveModule';
 
 function getModuleName(basePath: string, targetPath: string) {
 	return path.relative(basePath, targetPath).replace(/\..*?$/g, '').replace(/\\/g, '/');
+}
+
+function filterNonNull<T>(array: ReadonlyArray<T | null>): T[] {
+	return (array.filter((value) => value !== null) as T[]);
 }
 
 export default function makeChildModule(
@@ -21,11 +27,26 @@ export default function makeChildModule(
 	baseModuleName: string,
 	host: ts.CompilerHost,
 	compilerOptions: ts.CompilerOptions,
-	resolutionCache: ts.ModuleResolutionCache
+	resolutionCache: ts.ModuleResolutionCache,
+	stripUnusedExports?: ExportDataMap | undefined
 ) {
 	const moduleName = `${baseModuleName}/${getModuleName(basePath, sourceFile.fileName)}`;
+	const resolvedFileName = path.resolve(sourceFile.fileName);
 
-	const statements: ts.Statement[] = sourceFile.statements.map((node) => {
+	const statements: ts.Statement[] = filterNonNull(sourceFile.statements.map((node) => {
+		if (stripUnusedExports) {
+			const s = getNodeWithStrippedExports(sourceFile, resolvedFileName, node, stripUnusedExports);
+			if (s === null) {
+				return null;
+			}
+			// strip if no exports are specified in 'export { ... }'
+			if (ts.isExportDeclaration(s)) {
+				if (s.exportClause && s.exportClause.elements.length === 0) {
+					return null;
+				}
+			}
+			node = s;
+		}
 		if (ts.isFunctionDeclaration(node) ||
 			ts.isMissingDeclaration(node) ||
 			ts.isClassDeclaration(node) ||
@@ -80,7 +101,10 @@ export default function makeChildModule(
 			}
 		}
 		return node;
-	});
+	}));
+	if (!statements.length) {
+		return null;
+	}
 	const outModuleBlock = ts.createModuleBlock(statements);
 	const outModule = ts.createModuleDeclaration(
 		undefined,

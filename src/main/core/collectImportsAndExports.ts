@@ -4,13 +4,14 @@ import ExportData from '../types/ExportData';
 import ImportData from '../types/ImportData';
 import ImportsAndExports from '../types/ImportsAndExports';
 
+import mapEntityWithName from './mapEntityWithName';
 import getModuleNameFromSpecifier from './getModuleNameFromSpecifier';
 
-function getModuleNameFromReference(moduleReference: ts.ModuleReference): string {
+function getModuleNameFromReference(moduleReference: ts.ModuleReference, source: ts.SourceFile): string {
 	if (ts.isExternalModuleReference(moduleReference) && moduleReference.expression) {
 		return getModuleNameFromSpecifier(moduleReference.expression);
 	} else {
-		return moduleReference.getText();
+		return moduleReference.getText(source);
 	}
 }
 
@@ -28,10 +29,10 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 			exports.push({
 				moduleName: node.moduleSpecifier && getModuleNameFromSpecifier(node.moduleSpecifier),
 				namedExports: (node.exportClause && node.exportClause.elements.map((c) => {
-					const name = c.name.getText();
+					const name = c.name.text;
 					return {
 						name: name,
-						baseName: c.propertyName && c.propertyName.getText(),
+						baseName: c.propertyName && c.propertyName.text,
 						node: c
 					};
 				})) || [],
@@ -45,7 +46,7 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 			//console.log('  Expression:', node.expression.getText());
 			if (node.isExportEquals) {
 				exports.push({
-					baseName: node.expression.getText(),
+					baseName: node.expression.getText(source),
 					namedExports: [],
 					node: node
 				});
@@ -53,7 +54,7 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 				exports.push({
 					namedExports: [{
 						name: 'default',
-						baseName: node.expression.getText(),
+						baseName: node.expression.getText(source),
 						node: node.expression
 					}],
 					node: node
@@ -64,35 +65,9 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 			//console.log('  Decorators:', node.decorators);
 			//console.log('  Modifiers:', node.modifiers);
 			//console.log('  Flags:', node.flags);
-			const isDefault = node.modifiers.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
-			if (ts.isVariableStatement(node)) {
-				// 'export [let|const] <variables...>'
-				exports.push({
-					namedExports: node.declarationList.declarations.map((d) => ({
-						name: d.name.getText(),
-						node: d
-					})),
-					node: node
-				});
-			} else if (ts.isFunctionDeclaration(node) ||
-				ts.isClassDeclaration(node) ||
-				ts.isInterfaceDeclaration(node) ||
-				ts.isTypeAliasDeclaration(node) ||
-				ts.isEnumDeclaration(node) ||
-				ts.isModuleDeclaration(node)) {
-				const baseName = node.name && node.name.getText();
-				const name = (isDefault || !node.name) ? 'default' : baseName!;
-				exports.push({
-					namedExports: [{
-						name: name,
-						baseName: baseName,
-						node: node
-					}],
-					node: node
-				});
-			} else if (ts.isImportEqualsDeclaration(node)) {
-				const baseName = getModuleNameFromReference(node.moduleReference);
-				const name = node.name.getText();
+			if (ts.isImportEqualsDeclaration(node)) {
+				const baseName = getModuleNameFromReference(node.moduleReference, source);
+				const name = node.name.text;
 				exports.push({
 					namedExports: [{
 						name: name,
@@ -107,6 +82,27 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 					module: baseName,
 					node: node
 				});
+			} else {
+				const namedExports = mapEntityWithName((node, exportName, baseName) => {
+					if (baseName) {
+						return {
+							name: exportName,
+							baseName: baseName,
+							node: node
+						};
+					} else {
+						return {
+							name: exportName,
+							node: node
+						};
+					}
+				}, node, source);
+				if (namedExports.length > 0) {
+					exports.push({
+						node: node as ts.Statement,
+						namedExports: namedExports
+					});
+				}
 			}
 		} else if (ts.isImportDeclaration(node)) {
 			// (refs. writeImportDeclaration)
@@ -122,7 +118,7 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 			} else {
 				if (node.importClause.name) {
 					imports.push({
-						name: node.importClause.name.getText(),
+						name: node.importClause.name.text,
 						fromName: 'default',
 						module: getModuleNameFromSpecifier(node.moduleSpecifier),
 						node: node
@@ -132,17 +128,17 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 					const bindings = node.importClause.namedBindings;
 					if (ts.isNamespaceImport(bindings)) {
 						imports.push({
-							name: bindings.name.getText(),
+							name: bindings.name.text,
 							fromName: '*',
 							module: getModuleNameFromSpecifier(node.moduleSpecifier),
 							node: node
 						});
 					} else {
 						bindings.elements.forEach((element) => {
-							const n = element.name.getText();
+							const n = element.name.text;
 							imports.push({
 								name: n,
-								fromName: element.propertyName && element.propertyName.getText() || n,
+								fromName: element.propertyName && element.propertyName.text || n,
 								module: getModuleNameFromSpecifier(node.moduleSpecifier),
 								node: node
 							});
@@ -156,8 +152,8 @@ export default function collectImportsAndExports(source: ts.SourceFile): Imports
 			//console.log('  Modifiers:', node.modifiers);
 			//console.log('  ModuleReference:', node.moduleReference);
 			imports.push({
-				name: node.name.getText(),
-				module: getModuleNameFromReference(node.moduleReference),
+				name: node.name.text,
+				module: getModuleNameFromReference(node.moduleReference, source),
 				node: node
 			});
 		} else {
