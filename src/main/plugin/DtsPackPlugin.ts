@@ -5,6 +5,20 @@ import { runWithFiles } from '../index';
 
 import PluginOptions from './PluginOptions';
 
+declare module 'webpack' {
+	// simple declaration for webpack 4.x
+	interface Compiler {
+		hooks?: {
+			[eventName: string]: {
+				tap(name: string, fn: Function): void;
+				tap(options: object, fn: Function): void;
+				tapAsync(name: string, fn: Function): void;
+				tapAsync(options: object, fn: Function): void;
+			}
+		};
+	}
+}
+
 type ComputedPluginOptions = PluginOptions & {
 	entry: string;
 	moduleName: string;
@@ -102,7 +116,7 @@ export default class DtsPackPlugin {
 	}
 
 	public apply(compiler: webpack.Compiler) {
-		compiler.plugin('emit', (compilation: WebpackCompilation, callback: (err?: any) => void) => {
+		const emitCallback = (compilation: WebpackCompilation, callback: (err?: any) => void) => {
 			computeOptions(this.options, compiler.options)
 				.then((opts) => {
 					const inputFiles: { [fileName: string]: string } = {};
@@ -150,7 +164,12 @@ export default class DtsPackPlugin {
 						callback(e);
 					});
 				});
-		});
+		};
+		if (compiler.hooks) {
+			compiler.hooks.emit.tapAsync('dts-pack', emitCallback);
+		} else {
+			compiler.plugin('emit', emitCallback);
+		}
 	}
 
 	private messageWriter(text: string) {
