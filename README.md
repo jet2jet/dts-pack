@@ -19,24 +19,26 @@ Usage:
   dts-pack --list [<options...>]
 
 Options:
-  --help, -h, -?       Show help                                       [boolean]
-  --project, -p        The project file or directory
+  --help, -h, -?        Show help                                      [boolean]
+  --project, -p         The project file or directory
                                            [string] [default: "./tsconfig.json"]
-  --entry, -e          The entry module name in the project             [string]
-  --moduleName, -m     The output module name                           [string]
-  --export, -x         The export entity name in the entry module name  [string]
-  --rootName, -r       The root variable name                           [string]
-  --outDir, -o         The output directory name (not file name)
+  --entry, -e           The entry module name in the project            [string]
+  --moduleName, -m      The output module name                          [string]
+  --export, -x          The export entity name in the entry module name [string]
+  --rootName, -r        The root variable name                          [string]
+  --outDir, -o          The output directory name (not file name)
                                                         [string] [default: "./"]
-  --style, -s          The declaration style
+  --style, -s           The declaration style
                    [string] [choices: "module", "namespace"] [default: "module"]
-  --defaultName, -d    The 'default' name for namespace-style
+  --defaultName, -d     The 'default' name for namespace-style
                                                   [string] [default: "_default"]
-  --importBindingName  The identifier for binding modules with 'import'
+  --importBindingName   The identifier for binding modules with 'import'
                                                   [string] [default: "__module"]
-  --list               If specified, outputs all imports and exports and exit
-                       without emitting files.                         [boolean]
-  --version, -v        Show version number                             [boolean]
+  --stripUnusedExports  The flag whether exported entities are stripped when not
+                        used                                           [boolean]
+  --list                If specified, outputs all imports and exports and exit
+                        without emitting files.                        [boolean]
+  --version, -V         Show version number                            [boolean]
 ```
 
 ### Options
@@ -95,6 +97,10 @@ Specifies the entity name to rename from `default`. If omitted, `_default` will 
 
 Specifies the dummy binding name for importing external modules (e.g. `import __module from '<external-module>'`). Default is `__module`.
 
+#### --stripUnusedExports (boolean)
+
+Specifies for stripping exported entities when not used. If omitted, the entities are not stripped.
+
 #### --list (boolean)
 
 Outputs all imports and exports in the sources of the project file. If this option is specified, no files are outputted.
@@ -115,7 +121,7 @@ For creating namespace-style, change 'module' of the command line above to 'name
 
 ## webpack plugin
 
-dts-pack can be used as a plugin for [webpack](https://webpack.js.org/). The `DtsPackPlugin` gathers all emitted files with an extension `.d.ts`, and emits one or two combined declaration file(s). Currently the plugin is tested only with the combination of webpack 3 and  [ts-loader](https://github.com/TypeStrong/ts-loader) (the plugin might be work on webpack 2, but not tested).
+dts-pack can be used as a plugin for [webpack](https://webpack.js.org/). The `DtsPackPlugin` gathers all emitted files with an extension `.d.ts`, and emits one or two combined declaration file(s). Currently the plugin is tested only with the combination of webpack 3/4 and  [ts-loader](https://github.com/TypeStrong/ts-loader) (the plugin might be work on webpack 2, but not tested).
 
 ### Usage
 
