@@ -28,8 +28,12 @@
     "yargs": "^11.0.0"
   },
   "devDependencies": {
+    "@types/enhanced-resolve": "^3.0.4",
     "@types/node": "6",
     "@types/webpack": "2",
     "@types/yargs": "^10.0.1"
+  },
+  "peerDependencies": {
+    "enhanced-resolve": "2 - 3 || 4.0.0-beta.0 - 4"
   }
 }

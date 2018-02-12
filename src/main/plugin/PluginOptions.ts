@@ -12,5 +12,16 @@ export default interface PluginOptions extends OptionsBase {
 	 * true if using source files in the project file instead of emitting declaration files.
 	 * (even if useProjectSources is true, other emitting declaration files will be removed)
 	 */
-	useProjectSources?: boolean;
+	useProjectSources?: boolean | undefined;
+	/**
+	 * true if using module resolution method from TypeScript only.
+	 * By default, the plugin uses enhanced-resolve with webpack configuration for module resolution.
+	 */
+	useTsModuleResolution?: boolean | undefined;
+	/**
+	 * The regular expression that represents the pattern of script file names.
+	 * Only used when 'useTsModuleResolution' is not true.
+	 * Default is /\.tsx?$/
+	 */
+	scriptPattern?: RegExp;
 }

@@ -428,7 +428,10 @@ export function runWithFiles(
 	messageWriter: (text: string) => void,
 	options: Options,
 	inputFiles?: { [fileName: string]: string },
-	checkInputs?: boolean
+	checkInputs?: boolean,
+	resolverFactory?: (options: Options, compilerOptions: ts.CompilerOptions, host: ts.CompilerHost, resolutionCache: ts.ModuleResolutionCache) => (
+		(moduleNames: string[], containingFile: string, reusedNames?: string[]) => (ts.ResolvedModule | undefined)[]
+	)
 ): { files: { [fileName: string]: string }, warnings: string } {
 	let projectFile: string;
 	if (!options.project) {
@@ -457,6 +460,11 @@ export function runWithFiles(
 	compilerOptions.declaration = true;
 	const host = ts.createCompilerHost(compilerOptions);
 	const resolutionCache = ts.createModuleResolutionCache(process.cwd(), (file) => host.getCanonicalFileName(file));
+
+	if (resolverFactory) {
+		host.resolveModuleNames = resolverFactory(options, compilerOptions, host, resolutionCache);
+	}
+
 	const program = ts.createProgram(inputFiles && Object.keys(inputFiles).length > 0 ? [] : r.fileNames, compilerOptions, host);
 	const decls = gatherAllDeclarations(inputFiles, program, projectFile, compilerOptions, checkInputs);
 	if (decls.hasError) {

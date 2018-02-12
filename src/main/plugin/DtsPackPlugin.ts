@@ -5,6 +5,8 @@ import { runWithFiles } from '../index';
 
 import PluginOptions from './PluginOptions';
 
+import createResolverFactoryFunc from './createResolverFactory';
+
 declare module 'webpack' {
 	// simple declaration for webpack 4.x
 	interface Compiler {
@@ -116,8 +118,10 @@ export default class DtsPackPlugin {
 	}
 
 	public apply(compiler: webpack.Compiler) {
+		const createResolverFactory: typeof createResolverFactoryFunc = require('./createResolverFactory').default;
+
 		const emitCallback = (compilation: WebpackCompilation, callback: (err?: any) => void) => {
-			computeOptions(this.options, compiler.options)
+			computeOptions(this.options, compiler.options || {})
 				.then((opts) => {
 					const inputFiles: { [fileName: string]: string } = {};
 					let fileCount = 0;
@@ -138,7 +142,8 @@ export default class DtsPackPlugin {
 							this.messageWriter.bind(this),
 							opts,
 							opts.useProjectSources ? {} : inputFiles,
-							false
+							false,
+							createResolverFactory(this.options, (compiler.options && compiler.options.resolve) || {})
 						);
 						if (r.warnings && console.warn) {
 							console.warn(r.warnings);
