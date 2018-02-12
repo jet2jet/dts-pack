@@ -156,13 +156,21 @@ The additional options below can also be used for the plugin (all options are op
 
 Compiler options overwriting the options in the `tsconfig.json`. These options are only used for TypeScript compiler using in the plugin; some options (such as `declaration`, `removeComments`, `stripInternal`, etc.) are not effective.
 
-If the module resolution is not working properly because of the difference of settings between webpack configuration and `tsconfig.json`, please use `compilerOptions` to resolve problems.
+If the module resolution is not working properly because of the difference of settings between webpack configuration and `tsconfig.json`, please use `compilerOptions` or `useTsModuleResolution` to resolve problems.
 
 #### useProjectSources (boolean)
 
 Specifies `true` if you want to use real source files in the project instead of emitted declaration files. This may cause slower buildings because the source files will be compiled twice.
 
 Regardless of this option, the original emitted declaration files are removed from outputs.
+
+#### useTsModuleResolution (boolean)
+
+By default, the plugin uses module resolution methods from both [enhanced-resolve](https://github.com/webpack/enhanced-resolve), which webpack uses, and from TypeScript. Specifies `true` if you want to use the method from TypeScript only.
+
+#### scriptPattern (RegExp)
+
+The regular expression that represents the pattern of script file names. This option is only used when `useTsModuleResolution` is *not* `true`. Default is `/\.tsx?$/`.
 
 ## License
 
