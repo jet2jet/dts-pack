@@ -105,7 +105,7 @@ Specifies for stripping exported entities when not used. If omitted, the entitie
 
 Outputs all imports and exports in the sources of the project file. If this option is specified, no files are outputted.
 
-#### --version, -v (boolean)
+#### --version, -V (boolean)
 
 Shows the version number.
 
