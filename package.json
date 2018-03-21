@@ -3,6 +3,7 @@
   "version": "0.4.0",
   "description": "TypeScript declaration file (.d.ts) packager for ES6-module based program",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "author": "jet",
   "license": "MIT",
   "homepage": "https://github.com/jet2jet/dts-pack",
@@ -34,6 +35,6 @@
     "@types/yargs": "^10.0.1"
   },
   "peerDependencies": {
-    "enhanced-resolve": "2 - 3 || 4.0.0-beta.0 - 4"
+    "enhanced-resolve": "2 - 4"
   }
 }
