@@ -18,6 +18,7 @@ declare module 'webpack' {
 				tapAsync(options: object, fn: Function): void;
 			}
 		};
+		context?: string;
 	}
 }
 
@@ -34,6 +35,7 @@ interface WebpackAsset {
 
 interface WebpackCompilation {
 	assets: { [fileName: string]: WebpackAsset };
+	compiler: webpack.Compiler;
 	[key: string]: any;
 }
 
@@ -129,7 +131,7 @@ export default class DtsPackPlugin {
 					Object.keys(compilation.assets).forEach((fileName) => {
 						if (/\.d\.ts$/i.test(fileName)) {
 							const asset = compilation.assets[fileName];
-							inputFiles[fileName] = asset.source();
+							inputFiles[path.resolve(compilation.compiler.context || '', fileName)] = asset.source();
 							++fileCount;
 							delete compilation.assets[fileName];
 						}
