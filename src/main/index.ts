@@ -155,9 +155,16 @@ function outputImportsAndExports(
 }
 
 function isEqualEntryFile(source: ts.SourceFile, entryFileName: string): boolean {
-	if (isEqualPath(source.fileName, entryFileName))
+	let f = source.fileName;
+	if (isEqualPath(f, entryFileName))
 		return true;
-	const p = path.parse(path.normalize(source.fileName));
+	let r;
+	if ((r = /\.d(\.ts)$/i.exec(f))) {
+		f = f.substr(0, f.length - r[0].length) + r[1];
+		if (isEqualPath(f, entryFileName))
+			return true;
+	}
+	const p = path.parse(path.normalize(f));
 	p.ext = '';
 	p.base = '';
 	return isEqualPath(path.format(p), entryFileName);
@@ -240,7 +247,7 @@ function outputFiles(
 	const files: { [fileName: string]: string } = {};
 
 	if (!sourceFiles.some((src) => isEqualEntryFile(src, entryFileName))) {
-		throw `tsd-pack: ERROR: entry file '${options.entry}' is not found.`;
+		throw `dts-pack: ERROR: entry file '${options.entry}' is not found.`;
 	}
 	const printer = ts.createPrinter({
 		newLine: ts.NewLineKind.LineFeed
