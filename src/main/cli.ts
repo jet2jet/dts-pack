@@ -92,6 +92,21 @@ function main(): number {
 				type: 'boolean',
 				description: 'The flag whether exported entities are stripped when not used'
 			})
+			.option('headerText', {
+				alias: ['header', 'H'],
+				type: 'string',
+				description: 'Header text data for output files'
+			})
+			.option('footerText', {
+				alias: ['footer', 'F'],
+				type: 'string',
+				description: 'Footer text data for output files'
+			})
+			.option('isHeaderFooterRawText', {
+				alias: ['raw', 'R'],
+				type: 'boolean',
+				description: 'If set, headerText and footerText are emitted without comment block'
+			})
 			.option('list', {
 				type: 'boolean',
 				description: 'If specified, outputs all imports and exports and exit without emitting files.'
