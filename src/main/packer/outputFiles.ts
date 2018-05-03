@@ -4,6 +4,8 @@ import * as ts from 'typescript';
 import EditorConfig from '../types/EditorConfig';
 import ExportDataMap from '../types/ExportDataMap';
 import ExternalImportData from '../types/ExternalImportData';
+import HeaderFooterCallback from '../types/HeaderFooterCallback';
+import HeaderFooterOutputData from '../types/HeaderFooterOutputData';
 import GlobalDeclarationData from '../types/GlobalDeclarationData';
 import ImportsAndExports from '../types/ImportsAndExports';
 import Options from '../types/Options';
@@ -33,6 +35,53 @@ function isEqualEntryFile(source: ts.SourceFile, entryFileName: string): boolean
 	p.ext = '';
 	p.base = '';
 	return isEqualPath(path.format(p), entryFileName);
+}
+
+function createDefaultHeaderFooterCallback(text: string): HeaderFooterCallback {
+	return (data) => {
+		const now = new Date();
+		const outputName = path.basename(data.outputFileName);
+		return text.replace(/\[([A-Za-z0-9\_\-]+?)\]/g, (substring, p1: string) => {
+			switch (true) {
+				case p1 === 'name':
+					return outputName;
+				case p1 === 'module':
+					return data.moduleName;
+				case p1 === 'year':
+					return now.getFullYear().toString();
+				case p1 === 'year2':
+					return now.getFullYear().toString().substr(-2, 2);
+				case p1 === 'month':
+					return (now.getMonth() + 1).toString();
+				case p1 === 'month2':
+					return ('0' + (now.getMonth() + 1).toString()).substr(-2, 2);
+				case p1 === 'day':
+					return now.getDate().toString();
+				case p1 === 'day2':
+					return ('0' + now.getDate().toString()).substr(-2, 2);
+			}
+			return substring;
+		});
+	};
+}
+
+function getHeaderFooterText(
+	isHeader: boolean,
+	callback: HeaderFooterCallback | null | undefined,
+	data: HeaderFooterOutputData,
+	isRaw?: boolean | undefined
+): string[] {
+	if (!callback)
+		return [];
+	let d = callback(data);
+	if (d === null || typeof d === 'undefined')
+		return [];
+	d = '' + d;
+	return isRaw ? [d] : [isHeader ? '/*!' : '/*'].concat(
+		d.toString().replace(/\r\n/mg, '\n').split(/[\r\n]/g).map(
+			(s) => ` * ${s}`.replace(/\s*$/g, '')
+		)
+	).concat(' */');
 }
 
 export default function outputFiles(
@@ -99,8 +148,38 @@ export default function outputFiles(
 		});
 	}
 
+	const headerCallback = (typeof options.headerText === 'string' ?
+		createDefaultHeaderFooterCallback(options.headerText) :
+		options.headerText);
+	const footerCallback = (typeof options.footerText === 'string' ?
+		createDefaultHeaderFooterCallback(options.footerText) :
+		options.footerText);
+
 	if (options.style !== 'namespace') {
-		const childDeclOutputs: string[] = [];
+		const mainDeclFileName = path.join(outDir, options.moduleName, `index.d.ts`);
+		const childDeclFileName = path.join(outDir, options.moduleName, `${options.moduleName}.d.ts`);
+		const mainDeclOutputs: string[] = getHeaderFooterText(
+			true,
+			headerCallback,
+			{
+				entryFileName,
+				moduleName: options.moduleName,
+				projectFile,
+				outputFileName: mainDeclFileName
+			},
+			options.isHeaderFooterRawText
+		);
+		const childDeclOutputs: string[] = getHeaderFooterText(
+			true,
+			headerCallback,
+			{
+				entryFileName,
+				moduleName: options.moduleName,
+				projectFile,
+				outputFileName: childDeclFileName
+			},
+			options.isHeaderFooterRawText
+		);
 		let entryModule = '';
 		sourceFiles.forEach((file) => {
 			const m = makeChildModule(
@@ -122,7 +201,6 @@ export default function outputFiles(
 				entryModule = m.name;
 			}
 		});
-		const mainDeclOutputs: string[] = [];
 		const expFrom = options.export ? `.${options.export}` : '';
 		const dummyModuleName = options.importBindingName || '__module';
 		mainDeclOutputs.push(`/// <reference path='./${options.moduleName}.d.ts' />`);
@@ -144,11 +222,42 @@ export default function outputFiles(
 			}
 		}
 		mainDeclOutputs.push('');
+		mainDeclOutputs.push.apply(
+			mainDeclOutputs,
+			getHeaderFooterText(
+				false,
+				footerCallback,
+				{
+					entryFileName,
+					moduleName: options.moduleName,
+					projectFile,
+					outputFileName: mainDeclFileName
+				},
+				options.isHeaderFooterRawText
+			)
+		);
+		childDeclOutputs.push.apply(
+			childDeclOutputs,
+			getHeaderFooterText(
+				false,
+				footerCallback,
+				{
+					entryFileName,
+					moduleName: options.moduleName,
+					projectFile,
+					outputFileName: childDeclFileName
+				},
+				options.isHeaderFooterRawText
+			)
+		);
 
-		files[path.join(outDir, options.moduleName, `${options.moduleName}.d.ts`)] = childDeclOutputs.join(econf.lineBreak);
-		files[path.join(outDir, options.moduleName, `index.d.ts`)] = mainDeclOutputs.join(econf.lineBreak);
+		files[childDeclFileName] = childDeclOutputs.join(econf.lineBreak);
+		files[mainDeclFileName] = mainDeclOutputs.join(econf.lineBreak);
 	} else {
+		const declFileName = path.join(outDir, `${options.moduleName}.d.ts`);
+
 		let outputs: string[] = [];
+
 		const externalImportData: ExternalImportData = {
 			modules: {},
 			importedCount: 0
@@ -221,7 +330,30 @@ export default function outputFiles(
 		}
 		outputs.push('');
 
-		files[path.join(outDir, `${options.moduleName}.d.ts`)] = outputs.join(econf.lineBreak);
+		outputs = getHeaderFooterText(
+			true,
+			headerCallback,
+			{
+				entryFileName,
+				moduleName: options.moduleName,
+				projectFile,
+				outputFileName: declFileName
+			},
+			options.isHeaderFooterRawText
+		).concat(outputs);
+		outputs = outputs.concat(getHeaderFooterText(
+			false,
+			footerCallback,
+			{
+				entryFileName,
+				moduleName: options.moduleName,
+				projectFile,
+				outputFileName: declFileName
+			},
+			options.isHeaderFooterRawText
+		));
+
+		files[declFileName] = outputs.join(econf.lineBreak);
 	}
 
 	return { files, warnings };

@@ -1,5 +1,7 @@
 import * as ts from 'typescript';
 
+import HeaderFooterCallback from './HeaderFooterCallback';
+
 export default interface Options {
 	/**
 	 * The entry module name. Must be included in the project.
@@ -60,6 +62,29 @@ export default interface Options {
 	 * The boolean value whether exported entities are stripped when not used.
 	 */
 	stripUnusedExports?: boolean | undefined;
+
+	/**
+	 * Header text data for output files, or callback function which returns the header text.
+	 * If the string data is specified, following text are replaced:
+	 *   [name]    --> the basename of the output file name
+	 *   [module]  --> moduleName of the option
+	 *   [year]    --> the full year value of the build date
+	 *   [year2]   --> last 2-digit of the full year value of the build date
+	 *   [month]   --> the month value (1 to 12) of the build date
+	 *   [month2]  --> the 2-digit month value (01 to 12) of the build date
+	 *   [day]     --> the day value (1 to 31) of the build date
+	 *   [day2]    --> the 2-digit day value (01 to 31) of the build date
+	 */
+	headerText?: string | null | undefined | HeaderFooterCallback;
+	/**
+	 * Footer text data for output files, or callback function which returns the footer text.
+	 * The replacement rules for 'headerText' are also applied to 'footerText'.
+	 */
+	footerText?: string | null | undefined | HeaderFooterCallback;
+	/**
+	 * If true, headerText and footerText are emitted without comment block.
+	 */
+	isHeaderFooterRawText?: boolean | undefined;
 
 	// (for command-line option)
 	list?: boolean | undefined;
