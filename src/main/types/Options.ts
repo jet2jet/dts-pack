@@ -16,7 +16,9 @@ export default interface Options {
 	export?: string | undefined;
 	/**
 	 * The project file (tsconfig.json) or directory (containing tsconfig.json).
-	 * If empty, './tsconfig.json' will be used.
+	 * If empty, './tsconfig.json' will be used for command-line.
+	 * For DtsPackPlugin, the project file is searched from the containing directory of
+	 * the entry file, its parent directory, grandparent, etc.
 	 */
 	project?: string | undefined;
 	/**

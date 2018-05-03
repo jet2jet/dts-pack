@@ -1,5 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
+import * as fs from 'fs';
 
 import { runWithFiles } from '../index';
 
@@ -37,6 +38,32 @@ interface WebpackCompilation {
 	assets: { [fileName: string]: WebpackAsset };
 	compiler: webpack.Compiler;
 	[key: string]: any;
+}
+
+function searchTsconfigFile(entryFile: string, projectFile: string): string | undefined {
+	let baseDir = path.resolve(path.dirname(entryFile));
+	let checkPath = path.join(baseDir, projectFile);
+	if (fs.existsSync(checkPath)) {
+		return checkPath;
+	}
+	// if thep ath of projectFile is a relative path, then
+	// finish checking (don't check parent directories)
+	if (/^\.\.?[\\\/]/.test(projectFile)) {
+		return void (0);
+	}
+	// check parent directories
+	while (true) {
+		const parentDir = path.dirname(baseDir);
+		if (parentDir === baseDir) {
+			break;
+		}
+		baseDir = parentDir;
+		checkPath = path.join(baseDir, projectFile);
+		if (fs.existsSync(checkPath)) {
+			return checkPath;
+		}
+	}
+	return void (0);
 }
 
 function computeOptions(options: PluginOptions, conf: webpack.Configuration): Promise<ComputedPluginOptions> {
@@ -98,12 +125,15 @@ function computeOptions(options: PluginOptions, conf: webpack.Configuration): Pr
 					rootName = l;
 				}
 			}
+			// compute the path for tsconfig.json
+			const project = searchTsconfigFile(entry, options.project || 'tsconfig.json');
 			return Object.assign({},
 				options,
 				{
 					outDir: outDir,
 					entry: entry,
 					moduleName: moduleName,
+					project: project,
 					rootName: rootName
 				}
 			);
