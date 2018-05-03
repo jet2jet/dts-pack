@@ -1,6 +1,6 @@
 {
   "name": "dts-pack",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "TypeScript declaration file (.d.ts) packager for ES6-module based program",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
