@@ -19,26 +19,33 @@ Usage:
   dts-pack --list [<options...>]
 
 Options:
-  --help, -h, -?        Show help                                      [boolean]
-  --project, -p         The project file or directory
+  --help, -h, -?                      Show help                        [boolean]
+  --project, -p                       The project file or directory
                                            [string] [default: "./tsconfig.json"]
-  --entry, -e           The entry module name in the project            [string]
-  --moduleName, -m      The output module name                          [string]
-  --export, -x          The export entity name in the entry module name [string]
-  --rootName, -r        The root variable name                          [string]
-  --outDir, -o          The output directory name (not file name)
+  --entry, -e                         The entry module name in the project
+                                                                        [string]
+  --moduleName, -m                    The output module name            [string]
+  --export, -x                        The export entity name in the entry module
+                                      name                              [string]
+  --rootName, -r                      The root variable name            [string]
+  --outDir, -o                        The output directory name (not file name)
                                                         [string] [default: "./"]
-  --style, -s           The declaration style
+  --style, -s                         The declaration style
                    [string] [choices: "module", "namespace"] [default: "module"]
-  --defaultName, -d     The 'default' name for namespace-style
+  --defaultName, -d                   The 'default' name for namespace-style
                                                   [string] [default: "_default"]
-  --importBindingName   The identifier for binding modules with 'import'
-                                                  [string] [default: "__module"]
-  --stripUnusedExports  The flag whether exported entities are stripped when not
-                        used                                           [boolean]
-  --list                If specified, outputs all imports and exports and exit
-                        without emitting files.                        [boolean]
-  --version, -V         Show version number                            [boolean]
+  --importBindingName                 The identifier for binding modules with
+                                      'import'    [string] [default: "__module"]
+  --stripUnusedExports                The flag whether exported entities are
+                                      stripped when not used           [boolean]
+  --headerText, --header, -H          Header text data for output files [string]
+  --footerText, --footer, -F          Footer text data for output files [string]
+  --isHeaderFooterRawText, --raw, -R  If set, headerText and footerText are
+                                      emitted without comment block    [boolean]
+  --list                              If specified, outputs all imports and
+                                      exports and exit without emitting files.
+                                                                       [boolean]
+  --version, -V                       Show version number              [boolean]
 ```
 
 ### Options
@@ -101,6 +108,26 @@ Specifies the dummy binding name for importing external modules (e.g. `import __
 
 Specifies for stripping exported entities when not used. If omitted, the entities are not stripped.
 
+#### --headerText, --header, -H (string) / --footerText, --footer, -F (string)
+
+Header or footer text data for output files. For text data, following text are replaced:
+
+* `[name]`    --> the basename of the output file name
+* `[module]`  --> moduleName of the option
+* `[year]`    --> the full year value of the build date
+* `[year2]`   --> last 2-digit of the full year value of the build date
+* `[month]`   --> the month value (1 to 12) of the build date
+* `[month2]`  --> the 2-digit month value (01 to 12) of the build date
+* `[day]`     --> the day value (1 to 31) of the build date
+* `[day2]`    --> the 2-digit day value (01 to 31) of the build date
+
+If you use this option from the script, you can also specify callback function which returns the header/footer text. The type of the callback is [HeaderFooterCallback](./src/main/types/HeaderFooterCallback.ts).
+
+#### --isHeaderFooterRawText, --raw, -R (boolean)
+
+If set, the header and footer text (from `--headerText` and `--footerText` options) are output without any decorations.  
+If not set, header and footer text will be wrapped with `/*!\n * [each line text]\n */` for header and `/*\n * [each line text]\n */` for footer.
+
 #### --list (boolean)
 
 Outputs all imports and exports in the sources of the project file. If this option is specified, no files are outputted.
@@ -135,7 +162,10 @@ var DtsPackPlugin = require('dts-pack').DtsPackPlugin;
   plugins: [
     new DtsPackPlugin({
       entry: 'index.ts',
-      moduleName: 'myModule'
+      moduleName: 'myModule',
+      headerText: function (data) {
+        return 'Module \'' + data.moduleName + '\'';
+      }
     })
   ]
 }
@@ -148,6 +178,8 @@ var DtsPackPlugin = require('dts-pack').DtsPackPlugin;
 All options passed to the constructor of `DtsPackPlugin` are the same name to the command-line parameters. In addition, if `entry` and `moduleName` are the same to the webpack configuration (`entry` value and the key name of `entry` object respectively), they can also be omitted. Other options below can be collected from webpack configuration if not specified:
 
 - `outDir`: collected from `output.path`
+- `project`: search `tsconfig.json` from the directory containing `entry` file
+  - If specified `project` is but not an absolute path, and does not start with `./` or `../`, the file of `project` will be searched with the same process of the above search process of `tsconfig.json`.
 - `rootName`: collected from `output.library`
 
 The additional options below can also be used for the plugin (all options are optional).

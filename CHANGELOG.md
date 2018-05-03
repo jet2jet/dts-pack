@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0
+
+- Change the `project` file usage when using `DtsPackPlugin` (see [README.md](./README.md))
+  - Note that this change does not affect the command-line or APIs.
+- Add `--headerText` and `--footerText` options to add header and footer text for output files.
+
+## v0.4.1
+
+- Fix output file name on `DtsPackPlugin`
+
 ## v0.4.0
 
 - Use [enhanced-resolve](https://github.com/webpack/enhanced-resolve) for module resolution when using `DtsPackPlugin`.
