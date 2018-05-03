@@ -41,6 +41,9 @@ interface WebpackCompilation {
 }
 
 function searchTsconfigFile(entryFile: string, projectFile: string): string | undefined {
+	if (path.isAbsolute(projectFile)) {
+		return projectFile;
+	}
 	let baseDir = path.resolve(path.dirname(entryFile));
 	let checkPath = path.join(baseDir, projectFile);
 	if (fs.existsSync(checkPath)) {
