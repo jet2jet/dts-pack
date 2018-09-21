@@ -11,6 +11,7 @@ import gatherAllDeclarations from './core/gatherAllDeclarations';
 import getFormatDiagnosticHost from './core/getFormatDiagnosticHost';
 
 import isEqualPath from './utils/isEqualPath';
+import resolveTsconfig from './utils/resolveTsconfig';
 
 import outputFiles from './packer/outputFiles';
 import printImportsAndExports from './packer/printImportsAndExports';
@@ -38,15 +39,7 @@ export function runWithFiles(
 		(moduleNames: string[], containingFile: string, reusedNames?: string[]) => (ts.ResolvedModule | undefined)[]
 	)
 ): { files: { [fileName: string]: string }, warnings: string } {
-	let projectFile: string;
-	if (!options.project) {
-		projectFile = './tsconfig.json';
-	} else {
-		projectFile = options.project;
-		if (fs.statSync(projectFile).isDirectory()) {
-			projectFile = path.resolve(projectFile, 'tsconfig.json');
-		}
-	}
+	const projectFile = resolveTsconfig(options);
 
 	const conf = ts.readConfigFile(projectFile, (path) => fs.readFileSync(path, 'utf8'));
 	if (conf.error) {

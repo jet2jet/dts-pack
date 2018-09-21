@@ -20,6 +20,7 @@ declare module 'webpack' {
 			}
 		};
 		context?: string;
+		outputPath?: string;
 	}
 }
 
@@ -69,7 +70,13 @@ function searchTsconfigFile(entryFile: string, projectFile: string): string | un
 	return void (0);
 }
 
-function computeOptions(options: PluginOptions, conf: webpack.Configuration): Promise<ComputedPluginOptions> {
+function getWebpackOutputPath(compiler: webpack.Compiler) {
+	const conf = compiler.options || {};
+	return compiler.outputPath || (conf.output && conf.output.path);
+}
+
+function computeOptions(options: PluginOptions, compiler: webpack.Compiler): Promise<ComputedPluginOptions> {
+	const conf = compiler.options || {};
 	return (() => { // returns (options.entry || conf.entry) with Promise
 		if (options.entry) {
 			return Promise.resolve(options.entry);
@@ -115,8 +122,8 @@ function computeOptions(options: PluginOptions, conf: webpack.Configuration): Pr
 
 			// entry name may be relative path 
 			const entry = path.resolve(v);
-			// compute outDir from 'output.path' (if not specified, './' will be used)
-			const outDir = options.outDir || (conf.output && conf.output.path) || './';
+			// compute outDir from 'compiler.outputPath' or 'output.path' (if not specified, './' will be used)
+			const outDir = options.outDir || getWebpackOutputPath(compiler) || './';
 			// compute rootName from 'output.library' (if options.rootName is not specified)
 			let rootName = options.rootName;
 			if (!rootName && conf.output && conf.output.library) {
@@ -156,7 +163,8 @@ export default class DtsPackPlugin {
 		const createResolverFactory: typeof createResolverFactoryFunc = require('./createResolverFactory').default;
 
 		const emitCallback = (compilation: WebpackCompilation, callback: (err?: any) => void) => {
-			computeOptions(this.options, compiler.options || {})
+			const webpackOutputPath = getWebpackOutputPath(compilation.compiler);
+			computeOptions(this.options, compiler)
 				.then((opts) => {
 					const inputFiles: { [fileName: string]: string } = {};
 					let fileCount = 0;
@@ -164,7 +172,8 @@ export default class DtsPackPlugin {
 					Object.keys(compilation.assets).forEach((fileName) => {
 						if (/\.d\.ts$/i.test(fileName)) {
 							const asset = compilation.assets[fileName];
-							inputFiles[path.resolve(compilation.compiler.context || '', fileName)] = asset.source();
+							const assetBasePath = webpackOutputPath || compilation.compiler.context || '';
+							inputFiles[path.resolve(assetBasePath, fileName)] = asset.source();
 							++fileCount;
 							delete compilation.assets[fileName];
 						}
