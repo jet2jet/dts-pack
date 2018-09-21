@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1
+
+- Fix path resolution for emitted declaration files on `DtsPackPlugin`
+
 ## v0.5.0
 
 - Change the `project` file usage when using `DtsPackPlugin` (see [README.md](./README.md))
