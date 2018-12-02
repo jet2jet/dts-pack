@@ -24,4 +24,8 @@ export default interface PluginOptions extends OptionsBase {
 	 * Default is /\.tsx?$/
 	 */
 	scriptPattern?: RegExp;
+	/**
+	 * If true, the source declaration files will also be emitted.
+	 */
+	keepIndividualDeclarations?: boolean | undefined;
 }

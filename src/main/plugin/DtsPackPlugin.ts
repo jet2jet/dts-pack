@@ -175,7 +175,9 @@ export default class DtsPackPlugin {
 							const assetBasePath = webpackOutputPath || compilation.compiler.context || '';
 							inputFiles[path.resolve(assetBasePath, fileName)] = asset.source();
 							++fileCount;
-							delete compilation.assets[fileName];
+							if (!this.options.keepIndividualDeclarations) {
+								delete compilation.assets[fileName];
+							}
 						}
 					});
 
