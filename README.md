@@ -128,6 +128,15 @@ If you use this option from the script, you can also specify callback function w
 If set, the header and footer text (from `--headerText` and `--footerText` options) are output without any decorations.  
 If not set, header and footer text will be wrapped with `/*!\n * [each line text]\n */` for header and `/*\n * [each line text]\n */` for footer.
 
+#### childModuleNameConverter (function; used only from API)
+
+Specifies for generating child module name. This option is used only with `'module'`-style.
+
+The function prototype is `(moduleName: string, childName: string, resolvedFileName: string) => string`, which
+`moduleName` is the `--moduleName` option value, `childName` is the actual child module name, and
+`resolvedFileName` is the absolute child module file name. If the function is not specified,
+the default child module name will be `<moduleName>/<childName>`.
+
 #### --list (boolean)
 
 Outputs all imports and exports in the sources of the project file. If this option is specified, no files are outputted.
@@ -194,7 +203,8 @@ If the module resolution is not working properly because of the difference of se
 
 Specifies `true` if you want to use real source files in the project instead of emitted declaration files. This may cause slower buildings because the source files will be compiled twice.
 
-Regardless of this option, the original emitted declaration files are removed from outputs.
+Regardless of this option, the original emitted declaration files are removed from outputs
+unless `keepIndividualDeclarations` is `true`.
 
 #### useTsModuleResolution (boolean)
 
@@ -203,6 +213,10 @@ By default, the plugin uses module resolution methods from both [enhanced-resolv
 #### scriptPattern (RegExp)
 
 The regular expression that represents the pattern of script file names. This option is only used when `useTsModuleResolution` is *not* `true`. Default is `/\.tsx?$/`.
+
+#### keepIndividualDeclarations (boolean)
+
+Specifies `true` if you want to keep the individual (emitted) declaration files for output.
 
 ## License
 

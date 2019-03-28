@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+
+- Add `childModuleNameConverter` option (can only be used from API or `DtsPackPlugin`)
+- Add `keepIndividualDeclarations` option for `DtsPackPlugin`
+- Fix child module name generation
+- Support object value for webpack configuration `output.library`
+
 ## v0.5.1
 
 - Fix path resolution for emitted declaration files on `DtsPackPlugin`
