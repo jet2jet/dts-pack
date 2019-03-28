@@ -11,6 +11,7 @@ import ImportsAndExports from '../types/ImportsAndExports';
 import Options from '../types/Options';
 
 import isEqualPath from '../utils/isEqualPath';
+import pickupRootPath from '../utils/pickupRootPath';
 
 import collectImportsAndExports from '../core/collectImportsAndExports';
 import collectUnusedSymbols from '../core/collectUnusedSymbols';
@@ -35,6 +36,22 @@ function isEqualEntryFile(source: ts.SourceFile, entryFileName: string): boolean
 	p.ext = '';
 	p.base = '';
 	return isEqualPath(path.format(p), entryFileName);
+}
+
+function determineBaseModulePath(_entryBasePath: string, sourceFiles: ReadonlyArray<ts.SourceFile>) {
+	if (!sourceFiles.length) {
+		return '';
+	}
+	return sourceFiles.reduce<string | null>((prev, current) => {
+		const dirName = path.dirname(path.normalize(current.fileName));
+		if (prev === null) {
+			return dirName;
+		}
+		if (!prev) {
+			return prev;
+		}
+		return pickupRootPath(prev, dirName);
+	}, null)!;
 }
 
 function createDefaultHeaderFooterCallback(text: string): HeaderFooterCallback {
@@ -95,8 +112,9 @@ export default function outputFiles(
 	program: ts.Program
 ): { files: { [fileName: string]: string }, warnings: string } {
 	const baseUrl = compilerOptions.baseUrl || '.';
-	const basePath = path.resolve(path.dirname(projectFile), baseUrl);
-	const entryFileName = path.resolve(basePath, options.entry);
+	const entryBasePath = path.resolve(path.dirname(projectFile), baseUrl);
+	const basePath = determineBaseModulePath(entryBasePath, sourceFiles);
+	const entryFileName = path.resolve(entryBasePath, options.entry);
 	const outDir = options.outDir || './';
 	let warnings = '';
 	const files: { [fileName: string]: string } = {};
