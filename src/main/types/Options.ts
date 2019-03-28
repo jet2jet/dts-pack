@@ -87,6 +87,11 @@ export default interface Options {
 	 * If true, headerText and footerText are emitted without comment block.
 	 */
 	isHeaderFooterRawText?: boolean | undefined;
+	/**
+	 * The callback function to generate child module name (useful for strip internal directory name).
+	 * \`${moduleName}/${childName}\` is used for default.
+	 */
+	childModuleNameConverter?(moduleName: string, childName: string, resolvedFileName: string): string;
 
 	// (for command-line option)
 	list?: boolean | undefined;

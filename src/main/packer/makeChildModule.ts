@@ -21,8 +21,22 @@ function containsSourceFile(sourceFiles: ReadonlyArray<ts.SourceFile>, fileName:
 	return sourceFiles.some((sourceFile) => isEqualPath(path.resolve(sourceFile.fileName), fileName));
 }
 
+function makeChildModuleName(
+	baseModuleName: string,
+	baseModulePath: string,
+	resolvedFileName: string,
+	options: Options
+) {
+	const childModuleName = getModuleName(baseModulePath, resolvedFileName);
+	if (!options.childModuleNameConverter) {
+		return `${baseModuleName}/${childModuleName}`;
+	}
+	// @ts-ignore 2695
+	return (0, options.childModuleNameConverter)(baseModuleName, childModuleName, resolvedFileName);
+}
+
 export default function makeChildModule(
-	_options: Options,
+	options: Options,
 	sourceFile: ts.SourceFile,
 	sourceFiles: ReadonlyArray<ts.SourceFile>,
 	baseModulePath: string,
@@ -32,7 +46,7 @@ export default function makeChildModule(
 	resolutionCache: ts.ModuleResolutionCache,
 	stripUnusedExports?: ExportDataMap | undefined
 ) {
-	const moduleName = `${baseModuleName}/${getModuleName(baseModulePath, sourceFile.fileName)}`;
+	const moduleName = makeChildModuleName(baseModuleName, baseModulePath, sourceFile.fileName, options);
 	const resolvedFileName = path.resolve(sourceFile.fileName);
 
 	const statements: ts.Statement[] = filterNonNull(sourceFile.statements.map((node) => {
@@ -66,7 +80,7 @@ export default function makeChildModule(
 				(ts.isExportDeclaration(node) && node.moduleSpecifier)) {
 				const m = resolveModule(host, compilerOptions, resolutionCache, getModuleNameFromSpecifier(node.moduleSpecifier!), sourceFile.fileName);
 				if (m && containsSourceFile(sourceFiles, m.resolvedFileName)) {
-					const refModule = `${baseModuleName}/${getModuleName(baseModulePath, m.resolvedFileName)}`;
+					const refModule = makeChildModuleName(baseModuleName, baseModulePath, m.resolvedFileName, options);
 					//return ts.createImportDeclaration(
 					//	node.decorators,
 					//	node.modifiers,
@@ -80,7 +94,7 @@ export default function makeChildModule(
 				if (ts.isExternalModuleReference(ex) && ex.expression) {
 					const m = resolveModule(host, compilerOptions, resolutionCache, getModuleNameFromSpecifier(ex.expression), sourceFile.fileName);
 					if (m && containsSourceFile(sourceFiles, m.resolvedFileName)) {
-						const refModule = `${baseModuleName}/${getModuleName(baseModulePath, m.resolvedFileName)}`;
+						const refModule = makeChildModuleName(baseModuleName, baseModulePath, m.resolvedFileName, options);
 						//return ts.createImportEqualsDeclaration(
 						//	node.decorators,
 						//	node.modifiers,
