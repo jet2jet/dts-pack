@@ -127,12 +127,19 @@ function computeOptions(options: PluginOptions, compiler: webpack.Compiler): Pro
 			// compute rootName from 'output.library' (if options.rootName is not specified)
 			let rootName = options.rootName;
 			if (!rootName && conf.output && conf.output.library) {
-				const l = conf.output.library as (string | string[]);
-				if (l instanceof Array) {
-					// (since webpack 3)
-					rootName = l.join('.');
+				const lib: any = conf.output.library;
+				let libRoot: string | string[] | undefined;
+				// output.library may be object containing 'root' field
+				if (typeof lib === 'object' && !(lib instanceof Array)) {
+					libRoot = lib.root;
 				} else {
-					rootName = l;
+					libRoot = lib as (string | string[]);
+				}
+				if (libRoot instanceof Array) {
+					// (since webpack 3)
+					rootName = libRoot.join('.');
+				} else {
+					rootName = libRoot;
 				}
 			}
 			// compute the path for tsconfig.json
