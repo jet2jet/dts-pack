@@ -203,6 +203,7 @@ export default function outputFiles(
 			const m = makeChildModule(
 				options,
 				file,
+				sourceFiles,
 				basePath,
 				options.moduleName,
 				host,
@@ -293,6 +294,7 @@ export default function outputFiles(
 			const st = rebuildAST(
 				options,
 				file,
+				sourceFiles,
 				basePath,
 				allData,
 				externalImportData,

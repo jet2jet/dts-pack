@@ -10,12 +10,15 @@ import Options from '../types/Options';
 
 import getNodeWithStrippedExports from '../core/getNodeWithStrippedExports';
 
-import isChildPath from '../utils/isChildPath';
 import isEqualPath from '../utils/isEqualPath';
 
 import getIdentifierName from './getIdentifierName';
 import getNamespaceName from './getNamespaceName';
 import resolveModule from './resolveModule';
+
+function containsSourceFile(sourceFiles: ReadonlyArray<ts.SourceFile>, fileName: string) {
+	return sourceFiles.some((sourceFile) => isEqualPath(path.resolve(sourceFile.fileName), fileName));
+}
 
 function getImportData(data: ImportsAndExports, node: ts.Node): ImportData[] {
 	return data.imports.filter((x) => x.node === node);
@@ -77,6 +80,7 @@ function gatherAllExportEntitiesFromExternalModule(
 export default function rebuildAST(
 	options: Options,
 	sourceFile: ts.SourceFile,
+	sourceFiles: ReadonlyArray<ts.SourceFile>,
 	basePath: string,
 	allData: {
 		sourceFile: ts.SourceFile;
@@ -133,7 +137,7 @@ export default function rebuildAST(
 					i.forEach((d) => {
 						const m = resolveModule(host, compilerOptions, resolutionCache, d.module, sourceFile.fileName);
 						if (m) {
-							if (isChildPath(basePath, m.resolvedFileName)) {
+							if (containsSourceFile(sourceFiles, m.resolvedFileName)) {
 								if (d.name) {
 									let refNamespace = getNamespaceName(basePath, m.resolvedFileName, options);
 									if (d.fromName && d.fromName !== '*') {
