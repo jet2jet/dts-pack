@@ -6,15 +6,12 @@ import Options from '../types/Options';
 
 import isChildPath from '../utils/isChildPath';
 
+import getModuleName from './getModuleName';
 import getModuleNameFromSpecifier from '../core/getModuleNameFromSpecifier';
 import getNodeWithStrippedExports from '../core/getNodeWithStrippedExports';
 
 import createStringLiteral from './createStringLiteral';
 import resolveModule from './resolveModule';
-
-function getModuleName(basePath: string, targetPath: string) {
-	return path.relative(basePath, targetPath).replace(/\..*?$/g, '').replace(/\\/g, '/');
-}
 
 function filterNonNull<T>(array: ReadonlyArray<T | null>): T[] {
 	return (array.filter((value) => value !== null) as T[]);
@@ -23,14 +20,14 @@ function filterNonNull<T>(array: ReadonlyArray<T | null>): T[] {
 export default function makeChildModule(
 	_options: Options,
 	sourceFile: ts.SourceFile,
-	basePath: string,
+	baseModulePath: string,
 	baseModuleName: string,
 	host: ts.CompilerHost,
 	compilerOptions: ts.CompilerOptions,
 	resolutionCache: ts.ModuleResolutionCache,
 	stripUnusedExports?: ExportDataMap | undefined
 ) {
-	const moduleName = `${baseModuleName}/${getModuleName(basePath, sourceFile.fileName)}`;
+	const moduleName = `${baseModuleName}/${getModuleName(baseModulePath, sourceFile.fileName)}`;
 	const resolvedFileName = path.resolve(sourceFile.fileName);
 
 	const statements: ts.Statement[] = filterNonNull(sourceFile.statements.map((node) => {
@@ -63,8 +60,8 @@ export default function makeChildModule(
 			if (ts.isImportDeclaration(node) ||
 				(ts.isExportDeclaration(node) && node.moduleSpecifier)) {
 				const m = resolveModule(host, compilerOptions, resolutionCache, getModuleNameFromSpecifier(node.moduleSpecifier!), sourceFile.fileName);
-				if (m && isChildPath(basePath, m.resolvedFileName)) {
-					const refModule = `${baseModuleName}/${getModuleName(basePath, m.resolvedFileName)}`;
+				if (m && isChildPath(baseModulePath, m.resolvedFileName)) {
+					const refModule = `${baseModuleName}/${getModuleName(baseModulePath, m.resolvedFileName)}`;
 					//return ts.createImportDeclaration(
 					//	node.decorators,
 					//	node.modifiers,
@@ -77,8 +74,8 @@ export default function makeChildModule(
 				const ex = node.moduleReference;
 				if (ts.isExternalModuleReference(ex) && ex.expression) {
 					const m = resolveModule(host, compilerOptions, resolutionCache, getModuleNameFromSpecifier(ex.expression), sourceFile.fileName);
-					if (m && isChildPath(basePath, m.resolvedFileName)) {
-						const refModule = `${baseModuleName}/${getModuleName(basePath, m.resolvedFileName)}`;
+					if (m && isChildPath(baseModulePath, m.resolvedFileName)) {
+						const refModule = `${baseModuleName}/${getModuleName(baseModulePath, m.resolvedFileName)}`;
 						//return ts.createImportEqualsDeclaration(
 						//	node.decorators,
 						//	node.modifiers,
