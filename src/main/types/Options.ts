@@ -64,6 +64,13 @@ export default interface Options {
 	 * The boolean value whether exported entities are stripped when not used.
 	 */
 	stripUnusedExports?: boolean | undefined;
+	/**
+	 * The boolean value to define global export variable forcely.
+	 * This setting does not affect if `rootName` contains '.'.
+	 * For DtsPackPlugin, if 'output.libraryTarget' is 'var' (or unspecified),
+	 * this value is treated as true.
+	 */
+	forceDefineGlobal?: boolean;
 
 	/**
 	 * Header text data for output files, or callback function which returns the header text.

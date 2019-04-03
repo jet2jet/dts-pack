@@ -92,6 +92,10 @@ function main(): number {
 				type: 'boolean',
 				description: 'The flag whether exported entities are stripped when not used'
 			})
+			.option('forceDefineGlobal', {
+				type: 'boolean',
+				description: 'The flag whether to define global export variable forcely'
+			})
 			.option('headerText', {
 				alias: ['header', 'H'],
 				type: 'string',

@@ -141,6 +141,13 @@ function computeOptions(options: PluginOptions, compiler: webpack.Compiler): Pro
 				} else {
 					rootName = libRoot;
 				}
+				// compute forceDefineGlobal if not specified
+				if (
+					typeof options.forceDefineGlobal === 'undefined' &&
+					(!conf.output.libraryTarget || conf.output.libraryTarget === 'var')
+				) {
+					options.forceDefineGlobal = true;
+				}
 			}
 			// compute the path for tsconfig.json
 			const project = searchTsconfigFile(entry, options.project || 'tsconfig.json');

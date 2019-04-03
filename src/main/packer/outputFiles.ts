@@ -238,6 +238,12 @@ export default function outputFiles(
 				mainDeclOutputs.push('}');
 			} else {
 				mainDeclOutputs.push(`export as namespace ${targetNamespace};`);
+				if (options.forceDefineGlobal) {
+					mainDeclOutputs.push('');
+					mainDeclOutputs.push('declare global {');
+					mainDeclOutputs.push(`    var ${targetNamespace}: typeof ${dummyModuleName}${expFrom};`);
+					mainDeclOutputs.push('}');
+				}
 			}
 		}
 		mainDeclOutputs.push('');
@@ -346,6 +352,12 @@ export default function outputFiles(
 				outputs.push('}');
 			} else {
 				outputs.push(`export as namespace ${targetNamespace};`);
+				if (options.forceDefineGlobal) {
+					outputs.push('');
+					outputs.push('declare global {');
+					outputs.push(`    var ${targetNamespace}: typeof ${exportName};`);
+					outputs.push('}');
+				}
 			}
 		}
 		outputs.push('');
