@@ -38,6 +38,8 @@ Options:
                                       'import'    [string] [default: "__module"]
   --stripUnusedExports                The flag whether exported entities are
                                       stripped when not used           [boolean]
+  --forceDefineGlobal                 The flag whether to define global export
+                                      variable forcely                 [boolean]
   --headerText, --header, -H          Header text data for output files [string]
   --footerText, --footer, -F          Footer text data for output files [string]
   --isHeaderFooterRawText, --raw, -R  If set, headerText and footerText are
@@ -107,6 +109,13 @@ Specifies the dummy binding name for importing external modules (e.g. `import __
 #### --stripUnusedExports (boolean)
 
 Specifies for stripping exported entities when not used. If omitted, the entities are not stripped.
+
+#### --forceDefineGlobal (boolean)
+
+Specifies to define global export variable forcely.
+If specified, the variable which name is from `rootName` will be defined to `global` scope
+in addition to `export as namespace XXX;`.
+This setting does not affect if `rootName` contains '.', because the root namespace is always declared to `global`.
 
 #### --headerText, --header, -H (string) / --footerText, --footer, -F (string)
 
@@ -190,6 +199,7 @@ All options passed to the constructor of `DtsPackPlugin` are the same name to th
 - `project`: search `tsconfig.json` from the directory containing `entry` file
   - If specified `project` is but not an absolute path, and does not start with `./` or `../`, the file of `project` will be searched with the same process of the above search process of `tsconfig.json`.
 - `rootName`: collected from `output.library`
+- `forceDefineGlobal`: set to true if `output.libraryTarget` is `'var'` or unspecified
 
 The additional options below can also be used for the plugin (all options are optional).
 

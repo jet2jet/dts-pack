@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.0
+
+- Add `forceDefineGlobal` option
+
 ## v0.6.0
 
 - Add `childModuleNameConverter` option (can only be used from API or `DtsPackPlugin`)

@@ -9,4 +9,5 @@
 .gitmodules
 .gitattributes
 .npmignore
+tsconfig.json
 yarn.lock
