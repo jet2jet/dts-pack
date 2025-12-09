@@ -3,6 +3,8 @@
 dts-pack
 ==========
 
+**This package is deprecated and no longer supported. [`@microsoft/api-extractor`](https://www.npmjs.com/package/@microsoft/api-extractor) should be an alternative.**
+
 Generates concatenated `.d.ts` file(s) for the TypeScript project.
 
 ## Install
