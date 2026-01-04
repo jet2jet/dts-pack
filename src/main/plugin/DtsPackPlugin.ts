@@ -120,7 +120,7 @@ function computeOptions(options: PluginOptions, compiler: webpack.Compiler): Pro
 				throw new Error(`DtsPackPlugin: Cannot determine module name; please specify 'moduleName' to the plugin option.`);
 			}
 
-			// entry name may be relative path 
+			// entry name may be relative path
 			const entry = path.resolve(v);
 			// compute outDir from 'compiler.outputPath' or 'output.path' (if not specified, './' will be used)
 			const outDir = options.outDir || getWebpackOutputPath(compiler) || './';
@@ -216,7 +216,7 @@ export default class DtsPackPlugin {
 									size: () => src.length
 								};
 							})(r.files[file]);
-							compilation.assets[path.relative(opts.outDir, file)] = asset;
+							compilation.assets[file] = asset;
 						});
 					}
 					callback();
